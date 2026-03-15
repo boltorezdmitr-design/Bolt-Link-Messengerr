@@ -4,9 +4,13 @@
     <meta charset="UTF-8">
     <title>Bolt Link</title>
     <style>
-        body { font-family: sans-serif; display: flex; }
-        #sidebar { width: 250px; background: #f4f4f4; padding: 20px; height: 100vh; }
-        #main-content { padding: 20px; flex-grow: 1; }
+        /* Центрирование входа */
+        #auth-ui { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
+        
+        /* Основной интерфейс */
+        #app-ui { display: flex; height: 100vh; }
+        #sidebar { width: 250px; background: #333; color: white; padding: 20px; }
+        #main-content { flex-grow: 1; padding: 20px; }
         .hidden { display: none; }
     </style>
 </head>
@@ -14,39 +18,33 @@
 
     <div id="auth-ui">
         <h2>Bolt Link</h2>
+        <input type="text" id="username" placeholder="Username (для регистрации)"><br>
         <input type="email" id="email" placeholder="Email"><br>
         <input type="password" id="pass" placeholder="Пароль"><br>
-        <input type="text" id="username" placeholder="Username (для регистрации)"><br>
         <button onclick="handleAuth('register')">Регистрация</button>
         <button onclick="handleAuth('login')">Вход</button>
     </div>
 
-    <div id="app-ui" class="hidden" style="display: flex; width: 100%;">
+    <div id="app-ui" class="hidden">
         <div id="sidebar">
             <button onclick="showProfile()">Профиль</button><br><br>
-            <button onclick="toggleTheme()">Тема (Светлая/Темная)</button><br><br>
+            <button onclick="toggleTheme()">Сменить тему</button><br><br>
             <button onclick="location.reload()">Выйти</button>
         </div>
         
         <div id="main-content">
-            <input type="text" id="search-input" placeholder="Поиск пользователей...">
-            <button onclick="searchUser()">🔍</button>
+            <div style="text-align: center;">
+                <input type="text" id="search-input" placeholder="Поиск...">
+                <button onclick="searchUser()">🔍</button>
+            </div>
             <div id="results"></div>
         </div>
     </div>
 
-    <div id="profile-ui" class="hidden">
-        <h3>Редактирование профиля</h3>
-        <input type="text" id="edit-nick" placeholder="Новый ник"><br>
-        <button onclick="updateProfile()">Сохранить</button>
-        <button onclick="deleteAccount()" style="color:red;">УДАЛИТЬ АККАУНТ</button>
-        <button onclick="document.getElementById('profile-ui').className='hidden'; document.getElementById('app-ui').className='';">Назад</button>
-    </div>
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, deleteUser } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getDatabase, ref, set, get, remove, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = { apiKey: "AIzaSyBw3881Qf3QqPzoC6RXX7dTVa3boftkoR8",
   authDomain: "massanger-6da0b.firebaseapp.com",
@@ -64,6 +62,7 @@
             const email = document.getElementById('email').value;
             const pass = document.getElementById('pass').value;
             const nick = document.getElementById('username').value;
+            
             try {
                 if (type === 'register') {
                     const res = await createUserWithEmailAndPassword(auth, email, pass);
@@ -76,21 +75,9 @@
             } catch (e) { alert(e.message); }
         };
 
-        window.deleteAccount = async () => {
-            if(confirm("Удалить профиль?")) {
-                const uid = auth.currentUser.uid;
-                await remove(ref(db, 'users/' + uid));
-                await deleteUser(auth.currentUser);
-                location.reload();
-            }
+        window.toggleTheme = () => {
+            document.body.style.backgroundColor = document.body.style.backgroundColor === 'black' ? 'white' : 'black';
         };
-
-        window.showProfile = () => {
-            document.getElementById('app-ui').classList.add('hidden');
-            document.getElementById('profile-ui').classList.remove('hidden');
-        };
-
-        window.toggleTheme = () => { document.body.style.background = document.body.style.background === 'black' ? 'white' : 'black'; };
     </script>
 </body>
 </html>
