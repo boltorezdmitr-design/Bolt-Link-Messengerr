@@ -4,41 +4,30 @@
     <meta charset="UTF-8">
     <title>Bolt Link</title>
     <style>
-        body { margin: 0; font-family: sans-serif; height: 100vh; }
-        .hidden { display: none !important; }
-        
-        #auth-ui, #app-ui, #profile-ui { width: 100%; height: 100%; }
-        #app-ui, #profile-ui { display: flex !important; }
-        
-        #sidebar { width: 250px; background: #333; color: white; padding: 20px; }
-        #main-content { flex-grow: 1; padding: 20px; }
+        body { font-family: sans-serif; height: 100vh; margin: 0; }
+        .screen { display: none; padding: 20px; }
+        .active { display: block !important; }
     </style>
 </head>
 <body>
 
-    <div id="auth-ui">
+    <div id="auth-screen" class="screen active">
         <h2>Вход</h2>
         <input type="email" id="email" placeholder="Email"><br>
         <input type="password" id="pass" placeholder="Пароль"><br>
-        <button onclick="authAction('login')">Войти</button>
+        <button onclick="login()">Войти</button>
     </div>
 
-    <div id="app-ui" class="hidden">
-        <div id="sidebar">
-            <button onclick="showUI('profile-ui')">Профиль</button><br>
-            <button onclick="location.reload()">Выйти</button>
-        </div>
-        <div id="main-content">
-            <h3>Главная</h3>
-        </div>
+    <div id="main-screen" class="screen">
+        <button onclick="showScreen('profile-screen')">Профиль</button>
+        <button onclick="location.reload()">Выйти</button>
+        <h1>Главная</h1>
     </div>
 
-    <div id="profile-ui" class="hidden">
-        <div style="padding: 20px;">
-            <h3>Профиль</h3>
-            <button onclick="showUI('app-ui')">Назад</button>
-            <button onclick="deleteAccount()" style="color:red;">Удалить аккаунт</button>
-        </div>
+    <div id="profile-screen" class="screen">
+        <h1>Профиль</h1>
+        <button onclick="showScreen('main-screen')">Назад</button>
+        <button onclick="deleteAccount()" style="color:red;">УДАЛИТЬ АККАУНТ</button>
     </div>
 
     <script type="module">
@@ -55,30 +44,31 @@
         initializeApp(firebaseConfig);
         const auth = getAuth();
 
-        window.authAction = async (type) => {
-            const email = document.getElementById('email').value;
-            const pass = document.getElementById('pass').value;
+        // Функция переключения
+        window.showScreen = (id) => {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        };
+
+        // Вход
+        window.login = async () => {
             try {
-                await signInWithEmailAndPassword(auth, email, pass);
-                showUI('app-ui');
-            } catch (e) { alert(e.message); }
+                await signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('pass').value);
+                showScreen('main-screen');
+            } catch(e) { alert(e.message); }
         };
 
-        window.showUI = (id) => {
-            document.getElementById('auth-ui').classList.add('hidden');
-            document.getElementById('app-ui').classList.add('hidden');
-            document.getElementById('profile-ui').classList.add('hidden');
-            document.getElementById(id).classList.remove('hidden');
-        };
-
+        // Удаление
         window.deleteAccount = async () => {
-            const pass = prompt("Пароль:");
+            const p = prompt("Введите пароль для удаления:");
+            if (!p) return;
             try {
-                const cred = EmailAuthProvider.credential(auth.currentUser.email, pass);
+                const cred = EmailAuthProvider.credential(auth.currentUser.email, p);
                 await reauthenticateWithCredential(auth.currentUser, cred);
                 await deleteUser(auth.currentUser);
+                alert("Аккаунт удален");
                 location.reload();
-            } catch (e) { alert(e.message); }
+            } catch(e) { alert(e.message); }
         };
     </script>
 </body>
