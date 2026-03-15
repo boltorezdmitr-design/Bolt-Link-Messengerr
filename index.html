@@ -3,79 +3,94 @@
 <head>
     <meta charset="UTF-8">
     <title>Bolt Link</title>
+    <style>
+        body { font-family: sans-serif; display: flex; }
+        #sidebar { width: 250px; background: #f4f4f4; padding: 20px; height: 100vh; }
+        #main-content { padding: 20px; flex-grow: 1; }
+        .hidden { display: none; }
+    </style>
 </head>
 <body>
+
     <div id="auth-ui">
-        <h2>Вход в Bolt Link</h2>
+        <h2>Bolt Link</h2>
         <input type="email" id="email" placeholder="Email"><br>
         <input type="password" id="pass" placeholder="Пароль"><br>
-        <button onclick="authAction('login')">Войти</button>
-        <button onclick="authAction('register')">Регистрация</button>
+        <input type="text" id="username" placeholder="Username (для регистрации)"><br>
+        <button onclick="handleAuth('register')">Регистрация</button>
+        <button onclick="handleAuth('login')">Вход</button>
     </div>
 
-    <div id="app-ui" style="display:none;">
-        <h2>Bolt Link</h2>
-        <button onclick="deleteAccount()" style="color:red;">Удалить аккаунт</button>
-        <button onclick="location.reload()">Выйти</button>
-        <h3>Все пользователи:</h3>
-        <div id="user-list"></div>
+    <div id="app-ui" class="hidden" style="display: flex; width: 100%;">
+        <div id="sidebar">
+            <button onclick="showProfile()">Профиль</button><br><br>
+            <button onclick="toggleTheme()">Тема (Светлая/Темная)</button><br><br>
+            <button onclick="location.reload()">Выйти</button>
+        </div>
+        
+        <div id="main-content">
+            <input type="text" id="search-input" placeholder="Поиск пользователей...">
+            <button onclick="searchUser()">🔍</button>
+            <div id="results"></div>
+        </div>
+    </div>
+
+    <div id="profile-ui" class="hidden">
+        <h3>Редактирование профиля</h3>
+        <input type="text" id="edit-nick" placeholder="Новый ник"><br>
+        <button onclick="updateProfile()">Сохранить</button>
+        <button onclick="deleteAccount()" style="color:red;">УДАЛИТЬ АККАУНТ</button>
+        <button onclick="document.getElementById('profile-ui').className='hidden'; document.getElementById('app-ui').className='';">Назад</button>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, deleteUser } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, set, get, remove, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyBw3881Qf3QqPzoC6RXX7dTVa3boftkoR8",
+        const firebaseConfig = { apiKey: "AIzaSyBw3881Qf3QqPzoC6RXX7dTVa3boftkoR8",
   authDomain: "massanger-6da0b.firebaseapp.com",
   projectId: "massanger-6da0b",
   storageBucket: "massanger-6da0b.firebasestorage.app",
   messagingSenderId: "799439844084",
   appId: "1:799439844084:web:f5cdea552fc8eb37ab24a1",
   measurementId: "G-KH4KZ9RQ6H"
-
-        };
-
+ };
         const app = initializeApp(firebaseConfig);
         const auth = getAuth();
         const db = getDatabase();
 
-        window.authAction = async (type) => {
+        window.handleAuth = async (type) => {
             const email = document.getElementById('email').value;
             const pass = document.getElementById('pass').value;
+            const nick = document.getElementById('username').value;
             try {
                 if (type === 'register') {
                     const res = await createUserWithEmailAndPassword(auth, email, pass);
-                    await set(ref(db, 'users/' + res.user.uid), { email: email });
+                    await set(ref(db, 'users/' + res.user.uid), { email, username: nick });
                 } else {
                     await signInWithEmailAndPassword(auth, email, pass);
                 }
-                document.getElementById('auth-ui').style.display = 'none';
-                document.getElementById('app-ui').style.display = 'block';
-                loadUsers();
+                document.getElementById('auth-ui').classList.add('hidden');
+                document.getElementById('app-ui').classList.remove('hidden');
             } catch (e) { alert(e.message); }
         };
 
-        function loadUsers() {
-            onValue(ref(db, 'users/'), (snap) => {
-                const list = document.getElementById('user-list');
-                list.innerHTML = '';
-                snap.forEach(c => { list.innerHTML += `<div>${c.val().email}</div>`; });
-            });
-        }
-
         window.deleteAccount = async () => {
-            const user = auth.currentUser;
-            if (user) {
-                try {
-                    await remove(ref(db, 'users/' + user.uid));
-                    await deleteUser(user);
-                    alert("Удалено");
-                    location.reload();
-                } catch (e) { alert("Ошибка: " + e.message); }
+            if(confirm("Удалить профиль?")) {
+                const uid = auth.currentUser.uid;
+                await remove(ref(db, 'users/' + uid));
+                await deleteUser(auth.currentUser);
+                location.reload();
             }
         };
+
+        window.showProfile = () => {
+            document.getElementById('app-ui').classList.add('hidden');
+            document.getElementById('profile-ui').classList.remove('hidden');
+        };
+
+        window.toggleTheme = () => { document.body.style.background = document.body.style.background === 'black' ? 'white' : 'black'; };
     </script>
 </body>
 </html>
