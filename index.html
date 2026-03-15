@@ -4,11 +4,13 @@
     <meta charset="UTF-8">
     <title>Bolt Link</title>
     <style>
-        body { margin: 0; font-family: sans-serif; }
-        .hidden { display: none !important; }
+        body { margin: 0; font-family: sans-serif; display: flex; height: 100vh; }
         
-        #auth-ui { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
-        #app-ui { display: flex; height: 100vh; }
+        /* Экран входа (центрирован) */
+        #auth-ui { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; }
+        
+        /* Основной интерфейс (скрыт по умолчанию) */
+        #app-ui { display: none; width: 100%; height: 100vh; }
         
         #sidebar { width: 250px; background: #333; color: white; padding: 20px; }
         #main-content { flex-grow: 1; padding: 20px; }
@@ -25,7 +27,7 @@
         <button onclick="handleAuth('login')">Вход</button>
     </div>
 
-    <div id="app-ui" class="hidden">
+    <div id="app-ui">
         <div id="sidebar">
             <button>Профиль</button><br><br>
             <button onclick="toggleTheme()">Тема</button><br><br>
@@ -33,7 +35,7 @@
         </div>
         <div id="main-content">
             <div style="display:flex; justify-content:center;">
-                <input type="text" placeholder="Поиск...">
+                <input type="text" placeholder="Поиск пользователей...">
                 <button>🔍</button>
             </div>
         </div>
@@ -68,9 +70,9 @@
                 } else {
                     await signInWithEmailAndPassword(auth, email, pass);
                 }
-                // ПЕРЕКЛЮЧЕНИЕ СТРАНИЦ
-                document.getElementById('auth-ui').classList.add('hidden');
-                document.getElementById('app-ui').classList.remove('hidden');
+                // ПЕРЕКЛЮЧЕНИЕ: прячем вход, показываем интерфейс
+                document.getElementById('auth-ui').style.display = 'none';
+                document.getElementById('app-ui').style.display = 'flex';
             } catch (e) { alert(e.message); }
         };
 
