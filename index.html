@@ -4,21 +4,21 @@
     <meta charset="UTF-8">
     <title>Bolt Link</title>
     <style>
-        /* Центрирование входа */
-        #auth-ui { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
+        body { margin: 0; font-family: sans-serif; }
+        .hidden { display: none !important; }
         
-        /* Основной интерфейс */
+        #auth-ui { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
         #app-ui { display: flex; height: 100vh; }
+        
         #sidebar { width: 250px; background: #333; color: white; padding: 20px; }
         #main-content { flex-grow: 1; padding: 20px; }
-        .hidden { display: none; }
     </style>
 </head>
 <body>
 
     <div id="auth-ui">
         <h2>Bolt Link</h2>
-        <input type="text" id="username" placeholder="Username (для регистрации)"><br>
+        <input type="text" id="username" placeholder="Username"><br>
         <input type="email" id="email" placeholder="Email"><br>
         <input type="password" id="pass" placeholder="Пароль"><br>
         <button onclick="handleAuth('register')">Регистрация</button>
@@ -27,17 +27,15 @@
 
     <div id="app-ui" class="hidden">
         <div id="sidebar">
-            <button onclick="showProfile()">Профиль</button><br><br>
-            <button onclick="toggleTheme()">Сменить тему</button><br><br>
+            <button>Профиль</button><br><br>
+            <button onclick="toggleTheme()">Тема</button><br><br>
             <button onclick="location.reload()">Выйти</button>
         </div>
-        
         <div id="main-content">
-            <div style="text-align: center;">
-                <input type="text" id="search-input" placeholder="Поиск...">
-                <button onclick="searchUser()">🔍</button>
+            <div style="display:flex; justify-content:center;">
+                <input type="text" placeholder="Поиск...">
+                <button>🔍</button>
             </div>
-            <div id="results"></div>
         </div>
     </div>
 
@@ -54,7 +52,7 @@
   appId: "1:799439844084:web:f5cdea552fc8eb37ab24a1",
   measurementId: "G-KH4KZ9RQ6H"
  };
-        const app = initializeApp(firebaseConfig);
+        initializeApp(firebaseConfig);
         const auth = getAuth();
         const db = getDatabase();
 
@@ -70,6 +68,7 @@
                 } else {
                     await signInWithEmailAndPassword(auth, email, pass);
                 }
+                // ПЕРЕКЛЮЧЕНИЕ СТРАНИЦ
                 document.getElementById('auth-ui').classList.add('hidden');
                 document.getElementById('app-ui').classList.remove('hidden');
             } catch (e) { alert(e.message); }
