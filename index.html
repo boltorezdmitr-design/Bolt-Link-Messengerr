@@ -1,32 +1,29 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
+    <meta charset="UTF-8">
     <title>Bolt Link</title>
-    <style>
-        body { font-family: sans-serif; padding: 20px; }
-        .hidden { display: none; }
-    </style>
 </head>
 <body>
-    <h1>Bolt Link Messenger</h1>
-    
-    <div id="auth-section">
+    <div id="auth-ui">
+        <h2>Вход в Bolt Link</h2>
         <input type="email" id="email" placeholder="Email"><br>
         <input type="password" id="pass" placeholder="Пароль"><br>
-        <button onclick="login()">Войти</button>
-        <button onclick="register()">Регистрация</button>
+        <button onclick="authAction('login')">Войти</button>
+        <button onclick="authAction('register')">Регистрация</button>
     </div>
 
-    <div id="app-section" class="hidden">
-        <button onclick="logout()">Выйти</button>
-        <button onclick="deleteMyAccount()" style="color: red;">Удалить аккаунт</button>
-        <h3>Пользователи онлайн:</h3>
+    <div id="app-ui" style="display:none;">
+        <h2>Bolt Link</h2>
+        <button onclick="deleteAccount()" style="color:red;">Удалить аккаунт</button>
+        <button onclick="location.reload()">Выйти</button>
+        <h3>Все пользователи:</h3>
         <div id="user-list"></div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, deleteUser } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, deleteUser } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
@@ -37,49 +34,46 @@
   messagingSenderId: "799439844084",
   appId: "1:799439844084:web:f5cdea552fc8eb37ab24a1",
   measurementId: "G-KH4KZ9RQ6H"
+
         };
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth();
         const db = getDatabase();
 
-        window.register = () => {
-            createUserWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('pass').value)
-            .then(userCredential => {
-                set(ref(db, 'users/' + userCredential.user.uid), { email: userCredential.user.email });
-                alert("Регистрация успешна!");
-            }).catch(e => alert(e.message));
-        };
-
-        window.login = () => {
-            signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('pass').value)
-            .then(() => {
-                document.getElementById('auth-section').classList.add('hidden');
-                document.getElementById('app-section').classList.remove('hidden');
+        window.authAction = async (type) => {
+            const email = document.getElementById('email').value;
+            const pass = document.getElementById('pass').value;
+            try {
+                if (type === 'register') {
+                    const res = await createUserWithEmailAndPassword(auth, email, pass);
+                    await set(ref(db, 'users/' + res.user.uid), { email: email });
+                } else {
+                    await signInWithEmailAndPassword(auth, email, pass);
+                }
+                document.getElementById('auth-ui').style.display = 'none';
+                document.getElementById('app-ui').style.display = 'block';
                 loadUsers();
-            }).catch(e => alert(e.message));
+            } catch (e) { alert(e.message); }
         };
-
-        window.logout = () => { signOut(auth).then(() => location.reload()); };
 
         function loadUsers() {
-            onValue(ref(db, 'users/'), (snapshot) => {
+            onValue(ref(db, 'users/'), (snap) => {
                 const list = document.getElementById('user-list');
                 list.innerHTML = '';
-                snapshot.forEach(child => {
-                    list.innerHTML += `<div>📧 ${child.val().email}</div>`;
-                });
+                snap.forEach(c => { list.innerHTML += `<div>${c.val().email}</div>`; });
             });
         }
 
-        window.deleteMyAccount = async () => {
+        window.deleteAccount = async () => {
             const user = auth.currentUser;
-            if (user && confirm("Точно удалить?")) {
+            if (user) {
                 try {
                     await remove(ref(db, 'users/' + user.uid));
                     await deleteUser(user);
+                    alert("Удалено");
                     location.reload();
-                } catch (e) { alert(e.message); }
+                } catch (e) { alert("Ошибка: " + e.message); }
             }
         };
     </script>
